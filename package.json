@@ -1,0 +1,21 @@
+{
+  "name": "haziriguard",
+  "version": "1.0.0",
+  "description": "HaziriGuard - College attendance protection system",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "attendance",
+    "education",
+    "safety-buffer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
+
