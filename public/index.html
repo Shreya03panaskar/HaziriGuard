@@ -3,40 +3,273 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HaziriGuard</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background: #f8fafc;
-      color: #0f172a;
-    }
-    .card {
-      background: #ffffff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      text-align: center;
-    }
-    h1 {
-      margin: 0 0 0.5rem;
-      font-size: 1.5rem;
-    }
-    p {
-      margin: 0;
-      color: #64748b;
-    }
-  </style>
+  <meta name="description" content="HaziriGuard - Attendance protection and recovery system for college students">
+  <title>HaziriGuard | Attendance Protection</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="card">
-    <h1>HaziriGuard server running</h1>
-    <p>API is active. Frontend coming in Step 2.</p>
+  <!-- Accessibility skip link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ARIA Live region for screen reader announcements -->
+  <div id="announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-lockup">
+        <!-- Shield with protective checkmark inline SVG -->
+        <svg class="shield-logo" viewBox="0 0 32 36" width="32" height="36" aria-hidden="true" focusable="false">
+          <path d="M16 2 L28 7 V17 C28 24.5 22.8 31.2 16 34 C9.2 31.2 4 24.5 4 17 V7 Z" fill="#006d77" />
+          <path d="M16 4.5 L25.5 8.7 V16.5 C25.5 22.8 21.3 28.5 16 31 C10.7 28.5 6.5 22.8 6.5 16.5 V8.7 Z" fill="#0f343d" />
+          <path d="M11 16.5 L14.5 20 L21 13" fill="none" stroke="#83c5be" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <div>
+          <h1 class="app-title">HaziriGuard</h1>
+          <p class="app-tagline">Protect your attendance. Recover before it's too late.</p>
+        </div>
+      </div>
+
+      <!-- Quick action controls -->
+      <div class="header-actions">
+        <button id="btn-load-demo" class="btn btn-secondary btn-sm" aria-label="Load fictional demo data">
+          <span class="badge-fictional" aria-hidden="true">Sample</span>
+          Load Fictional Demo Data
+        </button>
+        <button id="btn-reset-data" class="btn btn-danger-outline btn-sm" aria-label="Reset all database records">
+          Reset All Data
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Network error banner -->
+  <div id="error-banner" class="banner banner-error hidden" role="alert">
+    <div class="banner-content">
+      <span class="banner-icon" aria-hidden="true">⚠️</span>
+      <span id="error-banner-message">Unable to reach the HaziriGuard server. Please ensure the local server is running.</span>
+    </div>
+    <button id="btn-retry-connection" class="btn btn-sm btn-error">Retry</button>
   </div>
+
+  <main id="main-content" class="app-main">
+    <!-- Status & Summary Strip -->
+    <section aria-labelledby="summary-heading" class="summary-section">
+      <h2 id="summary-heading" class="sr-only">Attendance Overview Summary</h2>
+      
+      <div class="summary-card">
+        <div class="summary-headline">
+          <span id="summary-status-icon" class="headline-icon" aria-hidden="true">📊</span>
+          <span id="summary-status-text" class="headline-text">Loading attendance status...</span>
+        </div>
+
+        <div class="summary-badges-grid">
+          <div class="stat-pill stat-danger">
+            <span class="stat-count" id="count-danger">0</span>
+            <span class="stat-label">In Danger</span>
+          </div>
+          <div class="stat-pill stat-careful">
+            <span class="stat-count" id="count-careful">0</span>
+            <span class="stat-label">Careful</span>
+          </div>
+          <div class="stat-pill stat-safe">
+            <span class="stat-count" id="count-safe">0</span>
+            <span class="stat-label">Safe</span>
+          </div>
+          <div class="stat-pill stat-tasks">
+            <span class="stat-count" id="count-tasks">0</span>
+            <span class="stat-label">Pending Catch-ups</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="content-layout">
+      <!-- Left Column: Subjects Section -->
+      <section aria-labelledby="subjects-heading" class="subjects-section">
+        <div class="section-header">
+          <div>
+            <h2 id="subjects-heading">Your Subjects</h2>
+            <p class="section-subtitle">Subjects in danger are highlighted first. Keep your safety buffer intact.</p>
+          </div>
+        </div>
+
+        <!-- Subjects Cards Container -->
+        <div id="subjects-container" class="cards-grid" aria-live="polite">
+          <!-- Dynamically populated cards -->
+        </div>
+
+        <!-- Empty State for Subjects -->
+        <div id="subjects-empty" class="empty-state hidden">
+          <div class="empty-icon" aria-hidden="true">📚</div>
+          <h3>No subjects tracked yet</h3>
+          <p>Add your first college course or load the fictional demo data to see safety buffers and catch-up task generation in action.</p>
+          <div class="empty-actions">
+            <a href="#form-add-subject" class="btn btn-primary">Add a Subject</a>
+            <button id="btn-load-demo-empty" class="btn btn-secondary">Load Demo Data</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Catch-up Planner & Management Tools -->
+      <aside class="sidebar-section" aria-label="Catch-up Planner and Settings">
+        
+        <!-- Catch-up Planner Panel -->
+        <section aria-labelledby="planner-heading" class="panel planner-panel">
+          <div class="panel-header">
+            <h2 id="planner-heading">Catch-up Planner</h2>
+            <span id="badge-task-count" class="badge badge-pill">0 Pending</span>
+          </div>
+          <p class="panel-intro">When you log a missed class, HaziriGuard automatically schedules a catch-up review due within 48 hours.</p>
+
+          <div id="tasks-list" class="tasks-container" aria-live="polite">
+            <!-- Dynamically populated task items -->
+          </div>
+
+          <div id="tasks-empty" class="empty-state-mini hidden">
+            <span class="mini-icon" aria-hidden="true">✅</span>
+            <p>No catch-up tasks pending. All missed topics are resolved!</p>
+          </div>
+        </section>
+
+        <!-- Add Subject Form -->
+        <section aria-labelledby="add-subject-heading" class="panel add-subject-panel">
+          <h2 id="add-subject-heading">Add Subject</h2>
+          <form id="form-add-subject" novalidate>
+            <div class="form-group">
+              <label for="input-subject-name">Subject Name <span class="required" aria-hidden="true">*</span></label>
+              <input 
+                type="text" 
+                id="input-subject-name" 
+                name="name" 
+                placeholder="e.g. Operating Systems" 
+                maxlength="60" 
+                required 
+                aria-describedby="subject-name-hint subject-name-error"
+              >
+              <small id="subject-name-hint" class="form-hint">1-60 characters, must be unique.</small>
+              <div id="subject-name-error" class="form-error hidden" role="alert"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="input-subject-required">Required Minimum Attendance (%) <span class="required" aria-hidden="true">*</span></label>
+              <input 
+                type="number" 
+                id="input-subject-required" 
+                name="required" 
+                value="75" 
+                min="1" 
+                max="99" 
+                step="1" 
+                required 
+                aria-describedby="subject-required-hint subject-required-error"
+              >
+              <small id="subject-required-hint" class="form-hint">College threshold (typically 75% or 80%).</small>
+              <div id="subject-required-error" class="form-error hidden" role="alert"></div>
+            </div>
+
+            <div id="add-subject-general-error" class="form-error general-error hidden" role="alert"></div>
+
+            <button type="submit" id="btn-submit-subject" class="btn btn-primary btn-block">Add Subject</button>
+          </form>
+        </section>
+
+        <!-- Settings Panel -->
+        <section aria-labelledby="settings-heading" class="panel settings-panel">
+          <h2 id="settings-heading">Emergency Reserve Setting</h2>
+          <p class="panel-intro">An emergency reserve of classes is held back for illness or sudden emergencies before any safety buffer is shown as spare.</p>
+
+          <form id="form-settings" class="settings-form">
+            <div class="form-row">
+              <label for="input-reserve">Reserve classes held back:</label>
+              <div class="reserve-input-group">
+                <input 
+                  type="number" 
+                  id="input-reserve" 
+                  name="reserve" 
+                  min="0" 
+                  max="10" 
+                  step="1" 
+                  value="3" 
+                  required
+                >
+                <button type="submit" class="btn btn-secondary">Save</button>
+              </div>
+            </div>
+            <div id="settings-message" class="form-message hidden" role="status"></div>
+          </form>
+        </section>
+
+      </aside>
+    </div>
+
+    <!-- Educational: How the numbers work (Collapsible Section) -->
+    <section class="how-it-works-section" aria-labelledby="how-it-works-summary">
+      <details class="details-card">
+        <summary id="how-it-works-summary" class="details-summary">
+          <span class="summary-title">
+            <svg class="info-icon" viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">
+              <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+              <line x1="10" y1="9" x2="10" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="10" cy="5.5" r="1.2" fill="currentColor"/>
+            </svg>
+            How the numbers work (Transparent Math & Safety Formulas)
+          </span>
+          <span class="toggle-indicator" aria-hidden="true">▾</span>
+        </summary>
+
+        <div class="details-body">
+          <div class="math-columns">
+            <div class="math-box">
+              <h3>1. Integer Cross-Multiplication</h3>
+              <p>Computers suffer from floating-point rounding errors (e.g. <code>0.1 + 0.2 ≠ 0.3</code>). HaziriGuard strictly compares whole integers:</p>
+              <pre class="math-code">belowLimit = (100 * attended) &lt; (required * total)</pre>
+            </div>
+
+            <div class="math-box">
+              <h3>2. Safety Buffer & Emergency Reserve</h3>
+              <p>Safe misses represent how many classes you could miss before dropping below your required threshold. The emergency reserve (default 3) is always withheld:</p>
+              <pre class="math-code">safeMisses  = floor((100*a - r*t) / r)
+spareBuffer = max(0, safeMisses - reserve)</pre>
+            </div>
+
+            <div class="math-box">
+              <h3>3. Recovery Needed</h3>
+              <p>When attendance drops below threshold, this calculates the exact number of consecutive upcoming classes you must attend to restore your requirement:</p>
+              <pre class="math-code">recoveryNeeded = ceil((r*t - 100*a) / (100 - r))</pre>
+            </div>
+          </div>
+
+          <div class="worked-example">
+            <h4>Worked Example (Judge Verification Test Case):</h4>
+            <p><strong>36 attended out of 40 held at 75% required (Emergency Reserve = 3):</strong></p>
+            <ul>
+              <li><strong>Current Percentage:</strong> <code>100 * 36 / 40 = 90.0%</code></li>
+              <li><strong>Safe Misses:</strong> <code>floor((3600 - 3000) / 75) = floor(600 / 75) = 8 classes</code></li>
+              <li><strong>Safety Buffer (Spare):</strong> <code>8 safe misses - 3 emergency reserve = 5 spare classes</code></li>
+              <li><strong>Status:</strong> <strong>Safe</strong> (5 classes buffer beyond emergency reserve)</li>
+              <li><strong>Recovery Needed:</strong> <code>0</code> (not below threshold)</li>
+            </ul>
+          </div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p class="footer-disclaimer">
+        <strong>Important:</strong> Rules differ by college. Always check your official attendance record.
+      </p>
+      <p class="footer-sub">
+        HaziriGuard MVP &bull; PromptWars x KickToTech 2026 &bull; Designed to protect student attendance and prevent late-semester shortfalls.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Main JavaScript Application -->
+  <script src="app.js"></script>
 </body>
 </html>
-
